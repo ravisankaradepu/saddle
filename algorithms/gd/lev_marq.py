@@ -3,6 +3,10 @@ import theano.tensor as T
 from theano.ifelse import ifelse
 import numpy as np
 
+
+from neupy.algorithms.utils import (parameters2vector, count_parameters,iter_parameters, setup_parameter_updates)
+from hessian_utils import find_hessian_and_gradient
+
 from neupy.utils import asfloat
 from neupy.network import errors
 from neupy.core.properties import BoundedProperty, ChoiceProperty
@@ -127,7 +131,17 @@ class LevenbergMarquardt(NoStepSelection, GradientDescent):
 
         params = list(iter_parameters(self))
         param_vector = parameters2vector(self)
+#######################################################################################
+        n_parameters = count_parameters(self)
+        self.variables.hessian = theano.shared(
+            value=asfloat(np.zeros((n_parameters, n_parameters))),
+            name='hessian_inverse')
+        parameters = list(iter_parameters(self))
+        hessian_matrix, full_gradient = find_hessian_and_gradient(
+            self.variables.error_func, parameters
+        )
 
+#######################################################################################
         J = compute_jaccobian(mse_for_each_sample, params)
         n_params = J.shape[1]
 
@@ -135,7 +149,7 @@ class LevenbergMarquardt(NoStepSelection, GradientDescent):
             J.T.dot(J) + new_mu * T.eye(n_params)
         ).dot(J.T).dot(mse_for_each_sample)
 
-        updates = [(mu, new_mu)]
+        updates = [(mu, new_mu),[(self.variables.hessian, hessian_matrix)]]
         parameter_updates = setup_parameter_updates(params, updated_params)
         updates.extend(parameter_updates)
 

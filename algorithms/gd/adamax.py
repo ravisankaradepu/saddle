@@ -7,6 +7,9 @@ from neupy.core.properties import ProperFractionProperty, NumberProperty
 from .base import MinibatchGradientDescent
 
 
+from neupy.algorithms.utils import (parameters2vector, count_parameters,iter_parameters, setup_parameter_updates)
+from hessian_utils import find_hessian_and_gradient
+
 __all__ = ('Adamax',)
 
 
@@ -72,6 +75,15 @@ class Adamax(MinibatchGradientDescent):
         beta1 = self.beta1
         beta2 = self.beta2
 
+        n_parameters = count_parameters(self)
+        self.variables.hessian = theano.shared(
+            value=asfloat(np.zeros((n_parameters, n_parameters))),
+            name='hessian_inverse')
+        parameters = list(iter_parameters(self))
+        hessian_matrix, full_gradient = find_hessian_and_gradient(
+            self.variables.error_func, parameters
+        )
+
         gradient = T.grad(self.variables.error_func, wrt=parameter)
 
         first_moment = beta1 * prev_first_moment + (1 - beta1) * gradient
@@ -86,5 +98,5 @@ class Adamax(MinibatchGradientDescent):
         return [
             (prev_first_moment, first_moment),
             (prev_weighted_inf_norm, weighted_inf_norm),
-            (parameter, parameter - step * parameter_delta),
+            (parameter, parameter - step * parameter_delta),(self.variables.hessian, hessian_matrix)
         ]
