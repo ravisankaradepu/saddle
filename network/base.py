@@ -467,8 +467,8 @@ class BaseNetwork(BaseSkeleton):
             s=s.split('\n')[0:][0]
             str = self.class_name()
                         
-            str1 = s+'---'+str+'-alpha-epsilon'
+            str1 = s+'---'+str+'-alpha-epsilon'+'.eps'
             plt.savefig(str1,format='eps',dpi=1000)
             plt.plot(iterepochs,epsilon)
-            str2=s+'---'+str+'-epsilon-iterepochs'
+            str2=s+'---'+str+'-epsilon-iterepochs'+'.eps'
             plt.savefig(str2,format='eps',dpi=1000)
