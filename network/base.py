@@ -405,6 +405,7 @@ class BaseNetwork(BaseSkeleton):
 
         epsilon = []
         alpha = []
+        alpha0 = []
         with logs.disable_user_input():
             for epoch in iterepochs:
                 validation_error = None
@@ -423,7 +424,8 @@ class BaseNetwork(BaseSkeleton):
                                                                  target_test)
                     epsilon.append(train_error)
                     alpha.append(numpy.sum(ev < 0))
-
+                    alpha0.append(numpy.sum(ev == 0))
+                    
                     training_errors.append(train_error)
                     validation_errors.append(validation_error)
 
@@ -454,7 +456,10 @@ class BaseNetwork(BaseSkeleton):
 
             summary.finish()
             logs.newline()
-            plt.plot(alpha,epsilon)
+            plt.plot(alpha,epsilon,'r')
+            plt.plot(alpha0,epsilon,'b')
+            plt.xlabel('alpha')
+            plt.ylabel('epsilon')
             
             # want to collect the output of stdout in a variable
             capture = StringIO()
@@ -470,5 +475,7 @@ class BaseNetwork(BaseSkeleton):
             str1 = s+'---'+str+'-alpha-epsilon'+'.eps'
             plt.savefig(str1,format='eps',dpi=1000)
             plt.plot(iterepochs,epsilon)
+            plt.xlabel('iterepochs')
+            plt.ylabel('epsilon')
             str2=s+'---'+str+'-epsilon-iterepochs'+'.eps'
             plt.savefig(str2,format='eps',dpi=1000)
